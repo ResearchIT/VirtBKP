@@ -1,1 +1,3 @@
 *.pyc
+etc/ca.crt
+etc/*.conf

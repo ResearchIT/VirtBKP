@@ -1,19 +1,19 @@
 #!/bin/python
 
-import printf
+import lib.printf as printf
+import lib.virtbkp_utils as virtbkp_utils
+import ConfigParser
+import sys
+import time
+import requests
+import subprocess
+import thread
 import ovirtsdk4 as sdk
 import ovirtsdk4.types as types
-import time
-import sys
-import subprocess
-import requests
-import requests
-import ConfigParser
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings()
 import xml.etree.ElementTree as ET
-import thread
-import virtbkp_utils
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings()
 
 # Get default values
 cfg = ConfigParser.ConfigParser()
