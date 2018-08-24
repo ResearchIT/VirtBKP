@@ -1,7 +1,7 @@
 #!/bin/python
 
-import lib.printf as printf
-import lib.virtbkp_utils as virtbkp_utils
+import virtbkp.printf as printf
+import virtbkp.virtbkp_utils as virtbkp_utils
 import ConfigParser
 import sys
 import time

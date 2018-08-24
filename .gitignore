@@ -1,3 +1,15 @@
-*.pyc
+bin
+bin/*
+include
+include/*
+lib/python2.7
+lib/python2.7/*
+lib64
+lib64/*
+share
+share/*
+pip-selfcheck.json
+
+**/*.pyc
 etc/ca.crt
 etc/*.conf
