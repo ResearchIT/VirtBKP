@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 import subprocess
 import logging
 import os
@@ -8,7 +8,7 @@ import ssl
 import ConfigParser
 import sys
 import time
-import virtbkp_utils
+import utils
 
 from urlparse import urlparse
 from httplib import HTTPSConnection
@@ -50,7 +50,7 @@ system_service = connection.system_service()
 #    you will upload.
 #cmd="qemu-img info "+ qcowfile + "|grep 'virtual size'|awk '{print $4}'|sed 's/(//g'"
 #size=int(subprocess.check_output(cmd, shell=True))
-utils = virtbkp_utils.virtbkp_utils()
+utils = utils.utils()
 provisioned_size = utils.get_qcow_size(qcowfile)
 
 disks_service = connection.system_service().disks_service()
