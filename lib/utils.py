@@ -1,16 +1,18 @@
-import subprocess, time, os, sys, printf
+import subprocess, time, os, sys, printf, yaml
 
-class utils:
+class Utils:
     qcowfile=None
 
     def  __init__(self):
         global qcowfile
 
-    def configure_vars(path, filename="rhvbackup.conf"):
-        # Load configuration variables
+    def configure_vars(self, path, filename="rhvbackup.conf"):
         fp = os.path.dirname(os.path.realpath(__file__))
-        config = yaml.load(file(fp + '/../' + path + filename))
+        config = yaml.load(file(fp + '/../' + path + '/' + filename))
         return config
+
+    def get_snapname(self, vmname):
+        return "" + vmname + "_" + str((time.strftime("%Y%m%d%H")))
 
     def get_qcow_size(self,qcowfile):
         cmd="qemu-img info "+ qcowfile + "|grep 'virtual size'|awk '{print $4}'|sed 's/(//g'"
@@ -34,20 +36,20 @@ class utils:
     def pid_qcow_convert(self,qcowfile):
         cmd="ps aux|grep qemu-img|grep -wv grep|grep convert|grep "+ qcowfile + "|awk '{print $2}'"
         pid=int(subprocess.check_output(cmd, shell=True))
-        return pid 
- 
+        return pid
+
     def progress_bar_qcow(self,qcowfile):
         time.sleep(3)
         seconds=time.time()
-        
+
         try:
             firstvalue=0
             endvalue=self.get_qcow_size(qcowfile)
-            pid=self.pid_qcow_convert(qcowfile) 
-            
+            pid=self.pid_qcow_convert(qcowfile)
+
             while os.path.isfile("/proc/"+str(pid)+"/io"):
                 value=self.get_pid_read(pid)
-            
+
             speed=str(round(float(value-firstvalue)/1024/1024,2)) + " MB/s..."
             firstvalue=value
             self.progress_bar(value,endvalue,speed)

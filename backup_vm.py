@@ -1,232 +1,292 @@
 #!/usr/bin/env python
 
-import ConfigParser
-import sys
-import time
-import requests
-import subprocess
-import thread
+#
+# System Imports
+#===============
+import argparse, requests, subprocess, sys, thread, datetime, time
 import ovirtsdk4 as sdk
 import ovirtsdk4.types as types
 import xml.etree.ElementTree as ET
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-import virtbkp.printf as printf
-import virtbkp.utils as utilities
+import lib.printf as printf
+from lib.utils import Utils
 
+#
+# Import Configurations
+#======================
 requests.packages.urllib3.disable_warnings()
 
 #
-# Configuration Parsing
-#======================
-parser = argparse.ArgumentParser(description="Process command line arguments")
-parser.add_argument('--debug', action="store", help="Debugging information")
-parser.add_argument('--config', action="store", help="Configuration File")
-parser.add_argument('--hostname', action="store", help="Virtual Machine Hostname to backup")
-parser.add_argument('--id', action="store", help="Virtual Machine ID to backup")
-parser.add_argument('--url', action="store", help="RHV URL (including api path)")
-parser.add_argument('--user', action="store", help="RHV Username")
-parser.add_argument('--pass', action="store", help="RHV Password")
-parser.add_argument('--ca_file', action="store", help="CA File Location")
-parser.add_argument('--backup_vm', action="store", help="Backup VM Name")
-parser.add_argument('--backup_dir', action="store", help="Backup Directory")
-args = parser.parse_args()
+# Globals
+#========
+global vmid
+global vmname
+global bkpvm
 
-cfg = utilities.configure_vars(open(sys.argv[1]))
-url=cfg.get('bkp', 'url')
-user=cfg.get('bkp', 'user')
-password=cfg.get('bkp', 'password')
-ca_file=cfg.get('bkp', 'ca_file')
-bckdir=cfg.get('bkp', 'bckdir')
-bkpvm=cfg.get('bkp', 'bkpvm')
+#
+# Functions
+#==========
+def get_vm_id(vmname):
+    """
+    Return a VM UUID based on the VM name. If multiple VMs are found, the first
+    match will be returned
+    """
+    vm_service = connection.service("vms")
+    vms = vm_service.list()
 
-vmname=sys.argv[2]
+    for vm in vms:
+        if vm.name == vmname:
+            return vm.id
 
+def get_snap_id(vmid):
+    """
+    Using the VM identifier, return a list of snapshots
+    """
+    headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
+    vmsnap_service = connection.service("vms/" + vmid + "/snapshots")
+    snaps = vmsnap_service.list()
 
-date=str((time.strftime("%Y-%m-%d-%H")))
-vmid=""
-snapname = "BACKUP" + "_" + date +"h"
+    for snap in snaps:
+        if snap.description == snapname:
+            return snap.id
 
+def get_snap_status(vmid, snapid):
+    """
+    Using the VM ID and the Snapshot ID, check the VM Snapshot status using
+    the snapshot service.
+    """
+    vmsnap_service = connection.service("vms/" + vmid + "/snapshots")
+    snaps = vmsnap_service.list()
 
-try:
-  # Create a connection to the server:
-  connection = sdk.Connection(
-	url=url,
-    	username=user,
-  	password=password,
- 	ca_file=ca_file)
-  printf.OK("Connection to oVIrt API success %s" % url) 
-except Exception as ex:
-  printf.ERROR("Connection to oVirt API has failed")
-  
-# Function to get VM_ID from VM name
-def get_id_vm(vmname):
- vm_service = connection.service("vms")
- vms = vm_service.list()
- for vm in vms:
-  if vm.name == vmname:
-    return vm.id
+    for snap in snaps:
+        if snap.id == snapid:
+            return snap.snapshot_status
 
-# Function to get ID of created snapshot
-def get_snap_id(idvm):
- headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
- vmsnap_service = connection.service("vms/"+idvm+"/snapshots")
- snaps = vmsnap_service.list()
- for snap in snaps:
-  if snap.description == snapname:
-   return snap.id
+def create_snap(vmid, snapname):
+    """
+    Create a snapshot for the specified VM
+    """
+    vm_service = connection.service("vms")
+    snapshots_service = vm_service.vm_service(vmid).snapshots_service()
+    snapshots_service.add(types.Snapshot(description=snapname, persist_memorystate=False))
+    snapid = get_snap_id(vmid)
+    status = get_snap_status(vmid, snapid)
 
-# Function to get snapshot status
-def get_snap_status(idvm,snapid):
- vmsnap_service = connection.service("vms/"+idvm+"/snapshots")
- snaps = vmsnap_service.list()
- for snap in snaps:
-  if snap.id == snapid:
-   return snap.snapshot_status
+    printf.INFO("Trying to create snapshot of VM: " + vmid)
 
-# Function to create snapshot
-def create_snap(idvm):
- vm_service = connection.service("vms")
- snapshots_service = vm_service.vm_service(idvm).snapshots_service()
- snapshots_service.add(types.Snapshot(description=snapname, persist_memorystate=False))
- snapid = get_snap_id(vmid)
- status = get_snap_status(idvm,snapid)
- printf.INFO("Trying to create snapshot of VM: " + idvm)
- while str(status) == "locked":
-    time.sleep(10)
-    printf.INFO("Waiting until snapshot creation ends")
-    status = get_snap_status(idvm,snapid)
- printf.OK("Snapshot created")
+    while str(status) == "locked":
+       time.sleep(10)
+       status = get_snap_status(vmid, snapid)
+       printf.INFO("Snapshot status (" + str(status) + ")")
 
-# Function to delte snapshot
-def delete_snap(idvm,snapid):
- snap_service = connection.service("vms/"+idvm+"/snapshots/"+snapid)
- snap_service.remove()
- status = get_snap_status(idvm,snapid)
- while str(status) == "locked":
-    time.sleep(30)
-    printf.INFO("Waiting until snapshot deletion ends") 
-    status = get_snap_status(idvm,snapid)
- printf.OK("Snapshot created")
+    printf.OK("Snapshot " + snapid + " created")
 
-# Function to get snapshost disk ID
-def snap_disk_id(idvm,snapid):
- svc_path = "vms/"+idvm+"/snapshots/"+snapid+"/disks/"
- disksnap_service = connection.service(svc_path)
- disks = disksnap_service.list()
- vm_disks = ()
- for disk in disks:
-  vm_disks = vm_disks + (disk.id,)
- return vm_disks
+def delete_snap(vmid, snapid):
+    """
+    Using the VM ID and the Snapshot ID, delete the specified VM Snapshot
+    and be sure to check on its status (do not try to )
+    """
+    snap_service = connection.service("vms/" + vmid + "/snapshots/" + snapid)
+    snap_service.remove()
+    status = get_snap_status(vmid,snapid)
 
-# Function to attach disk to VM
-def attach_disk(bkpid,diskid,snapid):
- xmlattach =  "<disk id=\""+diskid+"\"><snapshot id=\""+snapid+"\"/> <active>true</active></disk>"
- urlattach = url+"/v3/vms/"+bkpid+"/disks/"
- headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
- requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
- resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(user,password))
+    while str(status) == "locked":
+        time.sleep(10)
+        printf.INFO("Waiting until snapshot deletion ends")
+        status = get_snap_status(vmid,snapid)
 
-# Function to deactivate virtual disk
-def deactivate_disk(bkpid,diskid):
- xmldeactivate =  "<action/>"
- urldeactivate = url+"/v3/vms/"+bkpid+"/disks/"+diskid+"/deactivate"
- headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
- resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(user,password))
+    printf.OK("Snapshot " + snapid + " deleted.")
 
-# Function to dettach disk 
-def detach_disk(bkpid,diskid):
- urldelete = url+"/vms/"+bkpid+"/diskattachments/"+diskid
- requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
- requests.delete(urldelete, verify=False, auth=(user,password))
+def snap_disk_id(vmid, snapid):
+    """
+    Get the disk IDs so we can attach the disks to the backup system for
+    data retrieval.
+    """
+    svc_path = "vms/" + vmid + "/snapshots/" + snapid + "/disks/"
+    disksnap_service = connection.service(svc_path)
+    disks = disksnap_service.list()
+    vm_disks = ()
 
-# Function to get device name of a virtual disk
-def get_logical_disk(bkpid,diskid):
- dev="None"
- serial=diskid[0:20]
- cmd="grep -Rlw '"+serial+"' /sys/block/*/serial|awk -F '/' '{print $4}'"  
- #print "Obteniendo lista de discos de bkpvm"
- #print "Esperando para detectar el nombre del dispositivo"
- ###"grep -Rlw 56e1f970-017a-4b16-b /sys/block/*/serial|awk -F '/' '{print $4}'
- while str(dev) == "None":
-  try: 
-    path = subprocess.check_output(cmd, shell=True).replace("\n","")
-    if path.startswith("vd") or path.startswith("sd") :
-      dev = "/dev/" + path
-      time.sleep(1)
-  except:
-    continue
- return dev
+    for disk in disks:
+        vm_disks = vm_disks + (disk.id,)
+
+    return vm_disks
+
+def attach_disk(bkpid, diskid, snapid):
+    """
+    Attach disks to the backup Virtual Machine
+    """
+    xmlattach = "<disk id=\"" + diskid + "\"><snapshot id=\"" + snapid + "\"/> <active>true</active></disk>"
+    urlattach = url + "/v3/vms/" + bkpid + "/disks/"
+    headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(args.username, args.password))
+
+def deactivate_disk(bkpid, diskid):
+    """
+    Deactivate virtual disk
+    """
+    urldeactivate = url+"/v3/vms/"+bkpid+"/disks/"+diskid+"/deactivate"
+    headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
+    resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
+
+def detach_disk(bkpid, diskid):
+    """
+    Detach the disk from the backup Virtual Machine
+    """
+    urldelete = url + "/vms/" + bkpid + "/diskattachments/" + diskid
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    requests.delete(urldelete, verify=False, auth=(args.username, args.password))
+
+def get_logical_disk(bkpid, diskid):
+    """
+    Return the logical disk
+    """
+    dev="None"
+    serial=diskid[0:20]
+    cmd="grep -Rlw '" + serial + "' /sys/block/*/serial|awk -F '/' '{print $4}'"
+
+    while str(dev) == "None":
+        try:
+            path = subprocess.check_output(cmd, shell=True).replace("\n","")
+            if path.startswith("vd") or path.startswith("sd") :
+                dev = "/dev/" + path
+                time.sleep(1)
+        except:
+            continue
+
+    return dev
+
 
 def run_qemu_convert(cmd):
- out = subprocess.call(cmd, shell=True)
- if int(out) == 0:
-  #print "Se creo correctamente la imagen"
-  print
-  printf.OK("qcow2 file creation success")
- else:
-  print
-  printf.ERROR("qcow2 file creation failed")
+    """
+    Convert the image to a qcow2 image file
+    """
+    out = subprocess.call(cmd, shell=True)
+    if int(out) == 0:
+        print
+        printf.OK("qcow2 file creation success")
+    else:
+        print
+        printf.ERROR("qcow2 file creation failed")
 
-# Function  to create qcow file of disk
-def create_image_bkp(dev,diskname):
- bckfiledir = bckdir + "/" + vmname + "/" + date
- mkdir = "mkdir -p " + bckfiledir
- subprocess.call(mkdir, shell=True) 
- bckfile = bckfiledir + "/" + diskname + ".qcow2"
- printf.INFO("Creating qcow2 file: " + bckfile)
- cmd = "qemu-img convert -O qcow2 " + dev + " " +bckfile
- u=utilities.utils()
- thread.start_new_thread(run_qemu_convert,(cmd,))
- u.progress_bar_qcow(bckfile)
- 
-# Function to get virtual disk name
-def get_disk_name(idvm,snapid,diskid):
- svc_path = "vms/"+idvm+"/snapshots/"+snapid+"/disks/"
- disksnap_service = connection.service(svc_path)
- disks = disksnap_service.list()
- for disk in disks:
-  if diskid == str(disk.id):
-   return disk.alias
+def create_image_bkp(dev, diskname):
+    """
+    Create a backup image
+    """
+    bckfiledir = bckdir + "/" + vmname + "/" + date
+    mkdir = "mkdir -p " + bckfiledir
+    subprocess.call(mkdir, shell=True)
+    bckfile = bckfiledir + "/" + diskname + ".qcow2"
+    printf.INFO("Creating qcow2 file: " + bckfile)
+    cmd = "qemu-img convert -O qcow2 " + dev + " " +bckfile
+    u=utilities.utils()
+    thread.start_new_thread(run_qemu_convert,(cmd,))
+    u.progress_bar_qcow(bckfile)
 
-def backup(vmid,snapid,disk_id,bkpvm):
-  # Se agrega el disco a la VM que tomara el backup
-  printf.INFO("Attach snap disk to bkpvm")
-  attach_disk(bkpvm,disk_id,snapid)
-  # Se obtiene el nombre del dispositivo
-  printf.INFO("Identifying disk device, this might take a while")
-  dev = get_logical_disk(bkpvm,disk_id)
-  # Se obtiene el nombre del disco
-  diskname = get_disk_name(vmid,snapid,disk_id)
-  # Se crea la image qcow que seria el  backup como tal
-  create_image_bkp(dev,diskname)
-  # Se desactiva el disco del cual se hizo el backup
-  deactivate_disk(bkpvm,disk_id)
-  time.sleep(10)
-  # Se detacha el disco de la BKPVM
-  printf.INFO("Detach snap disk of bkpvm")
-  detach_disk(bkpvm,disk_id)
-  time.sleep(10)
+def get_disk_name(vmid, snapid, diskid):
+    """
+    Get the alias of the disk
+    """
+    svc_path = "vms/" + vmid + "/snapshots/" + snapid + "/disks/"
+    disksnap_service = connection.service(svc_path)
+    disks = disksnap_service.list()
 
-def main():
- global vmid 
- global vmname
- global bkpvm
- vmid = get_id_vm(vmname)
- bkpvm = get_id_vm(bkpvm)
- # Se crea el snap y se espera un rato para que termine sin problemas y pueda detectar el nombre del disco en VM de backup
- create_snap(vmid)
- #time.sleep(60)
- # Se obtiene el id del snap
- snapid = get_snap_id(vmid)
- # Se obtiene el ID del disco
- vm_disks = snap_disk_id(vmid,snapid)
- for disk_id in vm_disks:
-   printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
-   # Backup
-   backup(vmid,snapid,disk_id,bkpvm)
- printf.INFO("Trying to delete snapshot of " + vmname)
- delete_snap(vmid,snapid)
-  
+    for disk in disks:
+        if diskid == str(disk.id):
+            return disk.alias
 
-main()
+def backup(vmid, snapid, disk_id, bkpvm):
+    """
+    Perform the actual backup of the virtual machine, including:
+        - Attaching the snapshot disk to the Backup VM
+        - Creating an image backup of the disk
+        - Deactivating the snapshot disk
+        - Removing the snapshot disk from the Backup VM
+    """
+    printf.INFO("Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
+    attach_disk(bkpvm, disk_id, snapid)
+
+    printf.INFO("Identifying disk device (this might take a while)")
+    dev = get_logical_disk(bkpvm, disk_id)
+    diskname = get_disk_name(vmid, snapid, disk_id)
+
+    printf.INFO("Creating an image backup of the disk")
+    create_image_bkp(dev, diskname)
+
+    printf.INFO("Deactivating the disk")
+    deactivate_disk(bkpvm, disk_id)
+    time.sleep(10)
+
+    printf.INFO("Detaching snapshot disk from bkpvm")
+    detach_disk(bkpvm, disk_id)
+    time.sleep(10)
+
+#
+# Main
+#=====
+if __name__ == "__main__":
+
+    # Utils
+    utils = Utils()
+
+    # Argument Parser
+    parser = argparse.ArgumentParser(description="Process command line arguments")
+
+    config = utils.configure_vars("etc", "rhvbackup.conf")
+    parser.set_defaults(**config)
+
+    parser.add_argument('--debug', action="store", help="Debugging information")
+    parser.add_argument('--config', action="store", help="System Backup Configuration File")
+    parser.add_argument('--hostname', action="store", help="Virtual Machine Hostname to backup")
+    parser.add_argument('--api_url', action="store", help="RHV URL (including api path)")
+    parser.add_argument('--username', action="store", help="RHV Username")
+    parser.add_argument('--password', action="store", help="RHV Password")
+    parser.add_argument('--ca_file', action="store", help="CA File Location")
+    parser.add_argument('--backup_vm', action="store", help="Backup VM Name")
+    parser.add_argument('--backup_dir', action="store", help="Backup Directory")
+
+    args = parser.parse_args()
+
+    # Connection
+    try:
+        connection = sdk.Connection(
+            url=args.api_url,
+            username=args.username,
+            password=args.password,
+            ca_file=args.ca_file,
+            insecure=args.insecure,
+            log=args.log,
+        )
+    except Exception as ex:
+        printf.ERROR("Connection to oVirt API has failed")
+
+    # Retrieve VM
+    printf.INFO("Retrieving VM --> " + args.hostname)
+    vmid = get_vm_id(args.hostname)
+
+    # Retrieve Backup system
+    printf.INFO("Backup System --> " + args.backup_vm)
+    bkpvm = get_vm_id(args.backup_vm)
+
+    # Create the snapshot
+    now = datetime.datetime.now()
+    snapname = "BACKUP_" + args.hostname + "_" + now.strftime("%y%m%d-%H%M")
+    printf.INFO("Snapshot Name --> " + snapname)
+    create_snap(vmid, snapname)
+    snapid = get_snap_id(vmid)
+
+    # Backup the Virtual Machine
+    #vm_disks = snap_disk_id(vmid,snapid)
+    #for disk_id in vm_disks:
+    #    printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
+    #    backup(vmid, snapid, disk_id, bkpvm)
+
+    # Delete the Snapshot
+    printf.INFO("Trying to delete snapshot " + snapid + " of " + args.hostname)
+    delete_snap(vmid, snapid)
+
+    # Finish
+    printf.OK("Backup successful")
+
