@@ -122,6 +122,7 @@ def attach_disk(bkpid, diskid, snapid):
     """
     Attach disks to the backup Virtual Machine
     """
+    printf.INFO("Attaching Disk " + diskid + " from snapshot " + snapid + " to " + bkpid)
     xmlattach = "<disk id=\"" + diskid + "\"><snapshot id=\"" + snapid + "\"/> <active>true</active></disk>"
     urlattach = args.api_url + "/v3/vms/" + bkpid + "/disks/"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
@@ -211,6 +212,7 @@ def backup(vmid, snapid, disk_id, bkpvm):
     """
     printf.INFO("Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
     attach_disk(bkpvm, disk_id, snapid)
+    printf.INFO("Disk attached to Backup VM")
 
     printf.INFO("Identifying disk device (this might take a while)")
     dev = get_logical_disk(bkpvm, disk_id)
