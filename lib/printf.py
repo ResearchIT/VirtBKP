@@ -1,5 +1,6 @@
 import datetime
 
+PURPLE = '\033[95m'
 BLUE = '\033[94m'
 GREEN = '\033[92m'
 WARNING = '\033[93m'
@@ -17,3 +18,6 @@ def WARNING(msg):
 
 def INFO(msg):
     print BLUE + "[INFO] " + msg + ENDC
+
+def DEBUG(msg):
+	print PURPLE + "[DEBUG]" + msg + ENDC
