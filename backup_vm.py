@@ -23,9 +23,8 @@ requests.packages.urllib3.disable_warnings()
 # Globals
 #========
 global args
-global vmid
-global vmname
-global bkpvm
+global date
+global utils
 global connection
 
 
@@ -160,11 +159,13 @@ def deactivate_disk(bkpid, diskid):
     """
     Deactivate virtual disk
     """
+    xmldeactivate = "<action/>"
     urldeactivate = args.api_url + "/v3/vms/" + bkpid + "/disks/" + diskid + "/deactivate"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
     printf.DEBUG("Deactivate Request: ")
     print resp_attach
+
 #
 #
 #
@@ -195,8 +196,7 @@ def get_logical_disk(bkpid, diskid):
                 dev = "/dev/" + path
                 time.sleep(1)
         except Exception as ex:
-            print ex
-            sys.exit(1)
+            continue
 
     return dev
 
@@ -222,15 +222,14 @@ def create_image_bkp(dev, diskname):
     """
     Create a backup image
     """
-    bckfiledir = args.backup_dir + "/" + vmname + "/" + date
+    bckfiledir = args.backup_dir + "/" + args.hostname + "/" + date
     mkdir = "mkdir -p " + bckfiledir
     subprocess.call(mkdir, shell=True)
     bckfile = bckfiledir + "/" + diskname + ".qcow2"
     printf.INFO("Creating qcow2 file: " + bckfile)
-    cmd = "qemu-img convert -O qcow2 " + dev + " " +bckfile
-    u = utilities.utils()
+    cmd = "qemu-img convert -O qcow2 " + dev + " " + bckfile
     thread.start_new_thread(run_qemu_convert,(cmd,))
-    u.progress_bar_qcow(bckfile)
+    utils.progress_bar_qcow(bckfile)
 
 #
 #
@@ -250,7 +249,7 @@ def get_disk_name(vmid, snapid, diskid):
 #
 #
 #
-def backup(vmid, snapid, disk_id, bkpvm):
+def backup(vmid, snapid, disk_id, bkpid):
     """
     Perform the actual backup of the virtual machine, including:
         - Attaching the snapshot disk to the Backup VM
@@ -259,22 +258,22 @@ def backup(vmid, snapid, disk_id, bkpvm):
         - Removing the snapshot disk from the Backup VM
     """
     printf.INFO("Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
-    attach_disk(bkpvm, disk_id, snapid)
-    printf.INFO("Disk attached to Backup VM")
+    attach_disk(bkpid, disk_id, snapid)
 
     printf.INFO("Identifying disk device (this might take a while)")
-    dev = get_logical_disk(bkpvm, disk_id)
+    dev = get_logical_disk(bkpid, disk_id)
     diskname = get_disk_name(vmid, snapid, disk_id)
+    printf.DEBUG("Dev: " + dev)
 
     printf.INFO("Creating an image backup of the disk")
     create_image_bkp(dev, diskname)
 
     printf.INFO("Deactivating the disk")
-    deactivate_disk(bkpvm, disk_id)
+    deactivate_disk(bkpid, disk_id)
     time.sleep(10)
 
-    printf.INFO("Detaching snapshot disk from bkpvm")
-    detach_disk(bkpvm, disk_id)
+    printf.INFO("Detaching snapshot disk from " + args.backup_vm)
+    detach_disk(bkpid, disk_id)
     time.sleep(10)
 
 #
@@ -329,7 +328,7 @@ if __name__ == "__main__":
 
     # Create the snapshot
     now = datetime.datetime.now()
-    date = now.strftime("%y%m%d-%H%M")
+    date = now.strftime("%Y%m%d-%H%M")
     snapname = "BACKUP_" + args.hostname + "_" + date
     printf.INFO("Snapshot Name --> " + snapname)
     create_snap(vmid, snapname)
@@ -337,6 +336,7 @@ if __name__ == "__main__":
     printf.DEBUG("Snapshot ID: " + snapid)
 
     # Backup the Virtual Machine
+    printf.INFO("Backing up the virtual machine")
     vm_disks = snap_disk_id(vmid, snapid)
     for disk_id in vm_disks:
         printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
