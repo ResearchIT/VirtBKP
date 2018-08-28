@@ -278,10 +278,10 @@ if __name__ == "__main__":
     snapid = get_snap_id(vmid)
 
     # Backup the Virtual Machine
-    #vm_disks = snap_disk_id(vmid,snapid)
-    #for disk_id in vm_disks:
-    #    printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
-    #    backup(vmid, snapid, disk_id, bkpvm)
+    vm_disks = snap_disk_id(vmid, snapid)
+    for disk_id in vm_disks:
+        printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
+        backup(vmid, snapid, disk_id, bkpvm)
 
     # Delete the Snapshot
     printf.INFO("Trying to delete snapshot " + snapid + " of " + args.hostname)
