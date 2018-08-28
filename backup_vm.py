@@ -44,6 +44,9 @@ def get_vm_id(vmname):
         if vm.name == vmname:
             return vm.id
 
+#
+#
+#
 def get_snap_id(vmid):
     """
     Using the VM identifier, return a list of snapshots
@@ -56,6 +59,9 @@ def get_snap_id(vmid):
         if snap.description == snapname:
             return snap.id
 
+#
+#
+#
 def get_snap_status(vmid, snapid):
     """
     Using the VM ID and the Snapshot ID, check the VM Snapshot status using
@@ -68,6 +74,9 @@ def get_snap_status(vmid, snapid):
         if snap.id == snapid:
             return snap.snapshot_status
 
+#
+#
+#
 def create_snap(vmid, snapname):
     """
     Create a snapshot for the specified VM
@@ -87,6 +96,9 @@ def create_snap(vmid, snapname):
 
     printf.OK("Snapshot " + snapid + " created")
 
+#
+#
+#
 def delete_snap(vmid, snapid):
     """
     Using the VM ID and the Snapshot ID, delete the specified VM Snapshot
@@ -103,6 +115,9 @@ def delete_snap(vmid, snapid):
 
     printf.OK("Snapshot " + snapid + " deleted.")
 
+#
+#
+#
 def snap_disk_id(vmid, snapid):
     """
     Get the disk IDs so we can attach the disks to the backup system for
@@ -118,6 +133,9 @@ def snap_disk_id(vmid, snapid):
 
     return vm_disks
 
+#
+#
+#
 def attach_disk(bkpid, diskid, snapid):
     """
     Attach disks to the backup Virtual Machine
@@ -128,8 +146,12 @@ def attach_disk(bkpid, diskid, snapid):
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(args.username, args.password))
-    printf.DEBUG(resp_attach)
+    printf.DEBUG("Attach Request: ")
+    print resp_attach
 
+#
+#
+#
 def deactivate_disk(bkpid, diskid):
     """
     Deactivate virtual disk
@@ -137,7 +159,11 @@ def deactivate_disk(bkpid, diskid):
     urldeactivate = args.api_url + "/v3/vms/" + bkpid + "/disks/" + diskid + "/deactivate"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
-
+    printf.DEBUG("Deactivate Request: ")
+    print resp_attach
+#
+#
+#
 def detach_disk(bkpid, diskid):
     """
     Detach the disk from the backup Virtual Machine
@@ -146,12 +172,16 @@ def detach_disk(bkpid, diskid):
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     requests.delete(urldelete, verify=False, auth=(args.username, args.password))
 
+#
+#
+#
 def get_logical_disk(bkpid, diskid):
     """
     Return the logical disk
     """
     dev="None"
     serial=diskid[0:20]
+    printf.DEBUG("Disk Serial: " + serial)
     cmd="grep -Rlw '" + serial + "' /sys/block/*/serial|awk -F '/' '{print $4}'"
 
     while str(dev) == "None":
@@ -160,11 +190,15 @@ def get_logical_disk(bkpid, diskid):
             if path.startswith("vd") or path.startswith("sd") :
                 dev = "/dev/" + path
                 time.sleep(1)
-        except:
-            continue
+        except Exception as ex:
+            print ex
+            sys.exit(1)
 
     return dev
 
+#
+#
+#
 def run_qemu_convert(cmd):
     """
     Convert the image to a qcow2 image file
@@ -177,6 +211,9 @@ def run_qemu_convert(cmd):
         print
         printf.ERROR("qcow2 file creation failed")
 
+#
+#
+#
 def create_image_bkp(dev, diskname):
     """
     Create a backup image
@@ -191,6 +228,9 @@ def create_image_bkp(dev, diskname):
     thread.start_new_thread(run_qemu_convert,(cmd,))
     u.progress_bar_qcow(bckfile)
 
+#
+#
+#
 def get_disk_name(vmid, snapid, diskid):
     """
     Get the alias of the disk
@@ -203,6 +243,9 @@ def get_disk_name(vmid, snapid, diskid):
         if diskid == str(disk.id):
             return disk.alias
 
+#
+#
+#
 def backup(vmid, snapid, disk_id, bkpvm):
     """
     Perform the actual backup of the virtual machine, including:
