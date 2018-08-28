@@ -281,10 +281,17 @@ def backup(vmid, snapid, disk_id, bkpid):
 #=====
 if __name__ == "__main__":
 
-    # Utils
+    ###
+    ### Initial Variable creation and setup
+    ###
     utils = Utils()
 
-    # Argument Parser
+    now = datetime.datetime.now()
+    date = now.strftime("%Y%m%d-%H%M")
+
+    ###
+    ### Argument Parsing
+    ###
     parser = argparse.ArgumentParser(description="Process command line arguments")
 
     config = utils.configure_vars("etc", "rhvbackup.conf")
@@ -302,7 +309,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Connection
+    ###
+    ### Connection
+    ###
     try:
         connection = sdk.Connection(
             url=args.api_url,
@@ -327,8 +336,6 @@ if __name__ == "__main__":
     printf.DEBUG("Backup VM ID: " + bkpid)
 
     # Create the snapshot
-    now = datetime.datetime.now()
-    date = now.strftime("%Y%m%d-%H%M")
     snapname = "BACKUP_" + args.hostname + "_" + date
     printf.INFO("Snapshot Name --> " + snapname)
     create_snap(vmid, snapname)
