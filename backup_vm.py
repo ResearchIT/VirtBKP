@@ -132,7 +132,9 @@ def snap_disk_id(vmid, snapid):
     for disk in disks:
         vm_disks = vm_disks + (disk.id,)
 
-    printf.DEBUG("VM Disks" + vm_disks)
+    printf.DEBUG("VM Disks")
+    print vm_disks
+    
     return vm_disks
 
 #
