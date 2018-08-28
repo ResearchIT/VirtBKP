@@ -12,17 +12,22 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import lib.printf as printf
 from lib.utils import Utils
 
+
 #
 # Import Configurations
 #======================
 requests.packages.urllib3.disable_warnings()
 
+
 #
 # Globals
 #========
+global args
 global vmid
 global vmname
 global bkpvm
+global connection
+
 
 #
 # Functions
@@ -118,7 +123,7 @@ def attach_disk(bkpid, diskid, snapid):
     Attach disks to the backup Virtual Machine
     """
     xmlattach = "<disk id=\"" + diskid + "\"><snapshot id=\"" + snapid + "\"/> <active>true</active></disk>"
-    urlattach = url + "/v3/vms/" + bkpid + "/disks/"
+    urlattach = args.api_url + "/v3/vms/" + bkpid + "/disks/"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(args.username, args.password))
@@ -127,7 +132,7 @@ def deactivate_disk(bkpid, diskid):
     """
     Deactivate virtual disk
     """
-    urldeactivate = url+"/v3/vms/"+bkpid+"/disks/"+diskid+"/deactivate"
+    urldeactivate = args.api_url + "/v3/vms/" + bkpid + "/disks/" + diskid + "/deactivate"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
 
@@ -135,7 +140,7 @@ def detach_disk(bkpid, diskid):
     """
     Detach the disk from the backup Virtual Machine
     """
-    urldelete = url + "/vms/" + bkpid + "/diskattachments/" + diskid
+    urldelete = args.api_url + "/vms/" + bkpid + "/diskattachments/" + diskid
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     requests.delete(urldelete, verify=False, auth=(args.username, args.password))
 
@@ -158,7 +163,6 @@ def get_logical_disk(bkpid, diskid):
 
     return dev
 
-
 def run_qemu_convert(cmd):
     """
     Convert the image to a qcow2 image file
@@ -175,13 +179,13 @@ def create_image_bkp(dev, diskname):
     """
     Create a backup image
     """
-    bckfiledir = bckdir + "/" + vmname + "/" + date
+    bckfiledir = args.backup_dir + "/" + vmname + "/" + date
     mkdir = "mkdir -p " + bckfiledir
     subprocess.call(mkdir, shell=True)
     bckfile = bckfiledir + "/" + diskname + ".qcow2"
     printf.INFO("Creating qcow2 file: " + bckfile)
     cmd = "qemu-img convert -O qcow2 " + dev + " " +bckfile
-    u=utilities.utils()
+    u = utilities.utils()
     thread.start_new_thread(run_qemu_convert,(cmd,))
     u.progress_bar_qcow(bckfile)
 
@@ -261,7 +265,8 @@ if __name__ == "__main__":
         )
     except Exception as ex:
         printf.ERROR("Connection to oVirt API has failed")
-
+        sys.exit(0)
+        
     # Retrieve VM
     printf.INFO("Retrieving VM --> " + args.hostname)
     vmid = get_vm_id(args.hostname)
@@ -272,7 +277,8 @@ if __name__ == "__main__":
 
     # Create the snapshot
     now = datetime.datetime.now()
-    snapname = "BACKUP_" + args.hostname + "_" + now.strftime("%y%m%d-%H%M")
+    date = now.strftime("%y%m%d-%H%M")
+    snapname = "BACKUP_" + args.hostname + "_" + date
     printf.INFO("Snapshot Name --> " + snapname)
     create_snap(vmid, snapname)
     snapid = get_snap_id(vmid)

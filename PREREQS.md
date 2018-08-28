@@ -12,7 +12,8 @@
 
     pip install --upgrade pip
     pip install requests
-    PYCURL_SSL_LIBRARY="openssl" pip install pycurl
-    PYCURL_SSL_LIBRARY="openssl" pip install ovirt-engine-sdk-python
+    PYCURL_SSL_LIBRARY="nss" pip install pycurl
+    pip install PyYAML
+    pip install ovirt-engine-sdk-python
 
 
