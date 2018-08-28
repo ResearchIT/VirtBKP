@@ -123,6 +123,7 @@ def snap_disk_id(vmid, snapid):
     Get the disk IDs so we can attach the disks to the backup system for
     data retrieval.
     """
+    printf.INFO("Retrieving disk snapshots")
     svc_path = "vms/" + vmid + "/snapshots/" + snapid + "/disks/"
     disksnap_service = connection.service(svc_path)
     disks = disksnap_service.list()
@@ -131,6 +132,7 @@ def snap_disk_id(vmid, snapid):
     for disk in disks:
         vm_disks = vm_disks + (disk.id,)
 
+    printf.DEBUG("VM Disks" + vm_disks)
     return vm_disks
 
 #
@@ -316,10 +318,12 @@ if __name__ == "__main__":
     # Retrieve VM
     printf.INFO("Retrieving VM --> " + args.hostname)
     vmid = get_vm_id(args.hostname)
+    printf.DEBUG("VM ID: " + vmid)
 
     # Retrieve Backup system
     printf.INFO("Backup System --> " + args.backup_vm)
-    bkpvm = get_vm_id(args.backup_vm)
+    bkpid = get_vm_id(args.backup_vm)
+    printf.DEBUG("Backup VM ID: " + bkpid)
 
     # Create the snapshot
     now = datetime.datetime.now()
@@ -328,12 +332,13 @@ if __name__ == "__main__":
     printf.INFO("Snapshot Name --> " + snapname)
     create_snap(vmid, snapname)
     snapid = get_snap_id(vmid)
+    printf.DEBUG("Snapshot ID: " + snapid)
 
     # Backup the Virtual Machine
     vm_disks = snap_disk_id(vmid, snapid)
     for disk_id in vm_disks:
         printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
-        backup(vmid, snapid, disk_id, bkpvm)
+        backup(vmid, snapid, disk_id, bkpid)
 
     # Delete the Snapshot
     printf.INFO("Trying to delete snapshot " + snapid + " of " + args.hostname)
