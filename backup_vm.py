@@ -325,34 +325,40 @@ if __name__ == "__main__":
         printf.ERROR("Connection to oVirt API has failed")
         sys.exit(0)
         
-    # Retrieve VM
+    ###
+    ### Retrieve VM
+    ###
     printf.INFO("Retrieving VM --> " + args.hostname)
     vmid = get_vm_id(args.hostname)
     printf.DEBUG("VM ID: " + vmid)
 
-    # Retrieve Backup system
+    ###
+    ### Retrieve Backup system
+    ###
     printf.INFO("Backup System --> " + args.backup_vm)
     bkpid = get_vm_id(args.backup_vm)
     printf.DEBUG("Backup VM ID: " + bkpid)
 
-    # Create the snapshot
+    ###
+    ### Create the snapshot
+    ###
     snapname = "BACKUP_" + args.hostname + "_" + date
     printf.INFO("Snapshot Name --> " + snapname)
     create_snap(vmid, snapname)
     snapid = get_snap_id(vmid)
     printf.DEBUG("Snapshot ID: " + snapid)
 
-    # Backup the Virtual Machine
+    ###
+    ### Backup the Virtual Machine
+    ###
     printf.INFO("Backing up the virtual machine")
     vm_disks = snap_disk_id(vmid, snapid)
     for disk_id in vm_disks:
         printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
         backup(vmid, snapid, disk_id, bkpid)
 
-    # Delete the Snapshot
+    ###
+    ### Delete the Snapshot
+    ###
     printf.INFO("Trying to delete snapshot " + snapid + " of " + args.hostname)
     delete_snap(vmid, snapid)
-
-    # Finish
-    printf.OK("Backup successful")
-
