@@ -1,0 +1,27 @@
+---
+# OVirt API full URL
+api_url: https://example.com/ovirt-engine/api
+
+# RHV Credentials (can be LDAP, or other domain)
+username: admin@internal
+password: password@internal
+
+# CA Certificate, pulled from OVirt
+ca_file: ca.crt
+
+# Not the fqdn of the backup machine, but the RHV vm name
+backup_vm: rhv.backup.vm.name
+
+# Backup directory (where files and images should be stored)
+backup_dir: /mnt
+
+# Allow not checking the CA Certificate on https connections
+insecure: True
+
+# Log info
+log: logger.getLogger()
+
+# Debug
+debug: False
+
+restore: {}

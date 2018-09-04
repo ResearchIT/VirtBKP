@@ -116,8 +116,7 @@ def delete_snap(vmid, snapid):
 
 #
 #
-#
-def snap_disk_id(vmid, snapid):
+ddef snap_disk_id(vmid, snapid):
     """
     Get the disk IDs so we can attach the disks to the backup system for
     data retrieval.
@@ -149,8 +148,6 @@ def attach_disk(bkpid, diskid, snapid):
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(args.username, args.password))
-    printf.DEBUG("Attach Request: ")
-    print resp_attach
 
 #
 #
@@ -159,12 +156,11 @@ def deactivate_disk(bkpid, diskid):
     """
     Deactivate virtual disk
     """
+    printf.INFO("Deactivating Disk " + diskid)
     xmldeactivate = "<action/>"
     urldeactivate = args.api_url + "/v3/vms/" + bkpid + "/disks/" + diskid + "/deactivate"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
-    printf.DEBUG("Deactivate Request: ")
-    print resp_attach
 
 #
 #
@@ -173,6 +169,7 @@ def detach_disk(bkpid, diskid):
     """
     Detach the disk from the backup Virtual Machine
     """
+    printf.INFO("Detaching Disk")
     urldelete = args.api_url + "/vms/" + bkpid + "/diskattachments/" + diskid
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     requests.delete(urldelete, verify=False, auth=(args.username, args.password))
@@ -294,7 +291,7 @@ if __name__ == "__main__":
     ###
     parser = argparse.ArgumentParser(description="Process command line arguments")
 
-    config = utils.configure_vars("etc", "rhvbackup.conf")
+    config = utils.configure_vars("etc", "default.yml")
     parser.set_defaults(**config)
 
     parser.add_argument('--debug', action="store", help="Debugging information")
@@ -319,6 +316,7 @@ if __name__ == "__main__":
             password=args.password,
             ca_file=args.ca_file,
             insecure=args.insecure,
+            debug=args.debug,
             log=args.log,
         )
     except Exception as ex:

@@ -12,4 +12,5 @@ pip-selfcheck.json
 
 **/*.pyc
 etc/ca.crt
-etc/*.conf
+etc/default.conf
+etc/default.yml

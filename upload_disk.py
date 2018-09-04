@@ -1,17 +1,11 @@
 #!/usr/bin/env python
-import subprocess
-import logging
-import os
+import subprocess, logging, os, ssl, ConfigParser, sys, time, utils
 import ovirtsdk4 as sdk
 import ovirtsdk4.types as types
-import ssl
-import ConfigParser
-import sys
-import time
-import utils
 
 from urlparse import urlparse
 from httplib import HTTPSConnection
+
 cfg = ConfigParser.ConfigParser()
 cfg.readfp(open(sys.argv[1]))
 url=cfg.get('restore', 'url')
