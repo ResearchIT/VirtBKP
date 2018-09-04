@@ -116,7 +116,7 @@ def delete_snap(vmid, snapid):
 
 #
 #
-ddef snap_disk_id(vmid, snapid):
+def snap_disk_id(vmid, snapid):
     """
     Get the disk IDs so we can attach the disks to the backup system for
     data retrieval.
