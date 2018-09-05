@@ -283,6 +283,12 @@ if __name__ == "__main__":
     ###
     utils = Utils()
 
+    vmid = None
+    bkpid = None
+    snapname = None
+    snapid = None
+    vm_disks = None
+ 
     now = datetime.datetime.now()
     date = now.strftime("%Y%m%d-%H%M")
 
@@ -328,14 +334,22 @@ if __name__ == "__main__":
     ###
     printf.INFO("Retrieving VM --> " + args.hostname)
     vmid = get_vm_id(args.hostname)
-    printf.DEBUG("VM ID: " + vmid)
+    if vmid is None:
+        printf.ERROR("Error retrieving " + args.hostname)
+        sys.exit(1)
+    else:
+        printf.DEBUG("VM ID: " + vmid)
 
     ###
     ### Retrieve Backup system
     ###
     printf.INFO("Backup System --> " + args.backup_vm)
     bkpid = get_vm_id(args.backup_vm)
-    printf.DEBUG("Backup VM ID: " + bkpid)
+    if bkpid is None:
+        printf.ERROR("Error retrieving " + args.backup_vm)
+        sys.exit(2)
+    else:
+        printf.DEBUG("Backup VM ID: " + bkpid)
 
     ###
     ### Create the snapshot
@@ -351,6 +365,10 @@ if __name__ == "__main__":
     ###
     printf.INFO("Backing up the virtual machine")
     vm_disks = snap_disk_id(vmid, snapid)
+    if vm_disks is None:
+        printf.ERROR("Error retrieving disks for " + args.hostname)
+        sys.exit(1)
+
     for disk_id in vm_disks:
         printf.INFO("Trying to create a qcow2 file of disk " + disk_id)
         backup(vmid, snapid, disk_id, bkpid)
