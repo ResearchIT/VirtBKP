@@ -297,7 +297,7 @@ if __name__ == "__main__":
     ###
     parser = argparse.ArgumentParser(description="Process command line arguments")
 
-    config = utils.configure_vars("etc", "default.yml")
+    config = utils.configure_vars()
     parser.set_defaults(**config)
 
     parser.add_argument('--debug', action="store", help="Debugging information")
