@@ -327,6 +327,7 @@ if __name__ == "__main__":
         )
     except Exception as ex:
         printf.ERROR("Connection to oVirt API has failed")
+        print ex
         sys.exit(0)
         
     ###
