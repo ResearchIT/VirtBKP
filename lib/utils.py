@@ -6,7 +6,7 @@ class Utils:
     def  __init__(self):
         global qcowfile
 
-    def configure_vars(self, path, filename="rhvbackup.conf"):
+    def configure_vars(self, path="etc/", filename="backup_vm.yml"):
         fp = os.path.dirname(os.path.realpath(__file__))
         config = yaml.load(file(fp + '/../' + path + '/' + filename))
         return config
