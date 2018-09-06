@@ -322,7 +322,6 @@ if __name__ == "__main__":
             password=args.password,
             ca_file=args.ca_file,
             insecure=args.insecure,
-            debug=args.debug,
             log=args.log,
         )
     except Exception as ex:
