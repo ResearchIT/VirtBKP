@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source /root/rhvbackup/rhv-api-scripts/scripts/function.sh
+source /root/ovirt-backup/etc/backups/functions
 
 setup
 
