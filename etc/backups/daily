@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+source /root/rhvbackup/rhv-api-scripts/scripts/function.sh
+
+setup
+
+for line in "${backup_daily[@]}"
+do
+   hostname=$( echo ${line} | awk '{print $1}' )
+   id=$( echo ${line} | awk '{print $2}' )
+
+   run_backup --hostname ${hostname}  2>&1 >${BACKUP_LOGFILE}
+done
