@@ -11,16 +11,3 @@ BACKUP_LOGFILE="${LOGDIR}/${HOSTNAME}.log"
 BACKUP_FILE="${ETCDIR}/${HOSTNAME}.yml"
 RUN_BACKUPS=1
 DEBUG=0
-
-function run_backup()
-{
-    if [ "$RUN_BACKUPS" -eq 0 ]
-    then
-        echo "Backups disabled"
-    fi
-
-    source ${ROOTDIR}/bin/activate
-
-    ${ROOTDIR}/backup_vm.py $@ 
-}
-
