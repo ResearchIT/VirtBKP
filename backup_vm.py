@@ -339,14 +339,14 @@ if __name__ == "__main__":
             log=args.log,
         )
     except Exception as ex:
-        printf.ERROR("Connection to oVirt API has failed")
+        printf.ERROR(args.debug, "Connection to oVirt API has failed")
         print ex
         sys.exit(0)
         
     ###
     ### Retrieve VM
     ###
-    printf.INFO("Retrieving VM --> " + args.hostname)
+    printf.INFO(args.debug, "Retrieving VM --> " + args.hostname)
     vmid = get_vm_id(args.hostname)
     if vmid is None:
         printf.ERROR(args.debug, "Error retrieving " + args.hostname)
@@ -357,7 +357,7 @@ if __name__ == "__main__":
     ###
     ### Retrieve Backup system
     ###
-    printf.INFO("Backup System --> " + args.backup_vm)
+    printf.INFO(args.debug, "Backup System --> " + args.backup_vm)
     bkpid = get_vm_id(args.backup_vm)
     if bkpid is None:
         printf.ERROR(args.debug, "Error retrieving " + args.backup_vm)
