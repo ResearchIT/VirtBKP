@@ -316,7 +316,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--debug', '-d', action="count", help="Debugging information")
     parser.add_argument('--config', '-c', action="store", help="System Backup Configuration File")
-    parser.add_argument('--hostname', '-h', action="store", help="Virtual Machine Hostname to backup")
+    parser.add_argument('--hostname', '-H', action="store", help="Virtual Machine Hostname to backup")
     parser.add_argument('--api_url', '-U',  action="store", help="RHV URL (including api path)")
     parser.add_argument('--username', '-u', action="store", help="RHV Username")
     parser.add_argument('--password', '-p', action="store", help="RHV Password")
