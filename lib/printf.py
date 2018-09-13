@@ -21,7 +21,7 @@ def WARNING(count, msg):
 
 def INFO(count, msg):
 	if count >= 1:
-    	print BLUE + "[INFO] " + msg + ENDC
+		print BLUE + "[INFO] " + msg + ENDC
 
 def DEBUG(count, msg):
 	if count >= 3:
