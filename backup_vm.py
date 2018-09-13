@@ -377,7 +377,7 @@ if __name__ == "__main__":
     ###
     ### Backup the Virtual Machine
     ###
-    printf.INFO("Backing up the virtual machine")
+    printf.INFO(args.debug, "Backing up the virtual machine")
     vm_disks = snap_disk_id(vmid, snapid)
     if vm_disks is None:
         printf.ERROR(args.debug, "Error retrieving disks for " + args.hostname)
