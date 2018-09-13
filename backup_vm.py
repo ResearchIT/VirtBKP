@@ -268,7 +268,7 @@ def backup(vmid, snapid, disk_id, bkpid):
         - Deactivating the snapshot disk
         - Removing the snapshot disk from the Backup VM
     """
-    printf.INFO(args,debug, "Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
+    printf.INFO(args.debug, "Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
     attach_disk(bkpid, disk_id, snapid)
 
     printf.INFO(args.debug, "Identifying disk device (this might take a while)")
@@ -340,7 +340,7 @@ if __name__ == "__main__":
         )
     except Exception as ex:
         printf.ERROR(args.debug, "Connection to oVirt API has failed")
-        print ex
+        printf.ERROR(args.debug, ex)
         sys.exit(0)
         
     ###
