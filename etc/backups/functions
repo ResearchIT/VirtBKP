@@ -4,25 +4,13 @@
 #
 
 ROOTDIR=/root/ovirt-backup
+HOSTNAME=$( hostname -s )
 ETCDIR=${ROOTDIR}/etc
 LOGDIR=${ROOTDIR}/log
-BACKUP_LOGFILE=${LOGDIR}/$( hostname -s ).log
-BACKUP_FILE=${ETCDIR}/$( hostname -s ).yml
+BACKUP_LOGFILE="${LOGDIR}/${HOSTNAME}.log"
+BACKUP_FILE="${ETCDIR}/${HOSTNAME}.yml"
 RUN_BACKUPS=1
-DEBUG=1
-
-function setup()
-{
-    mkdir -p ${LOGDIR}
-    touch ${BACKUP_LOGFILE}
-    eval $(parse_yaml ${BACKUP_FILE})
-
-    if [ "$DEBUG" -ne 0 ]
-    then
-        ( set -o posix; set )
-        exit 255
-    fi
-}
+DEBUG=0
 
 function run_backup()
 {
@@ -31,32 +19,8 @@ function run_backup()
         echo "Backups disabled"
     fi
 
-    if [ "${hostid}x" = "x" ]
-    then
-        echo "Function must have a hostname parameter"
-        exit 1
-    fi
-
     source ${ROOTDIR}/bin/activate
 
     ${ROOTDIR}/backup_vm.py $@ 
 }
 
-function parse_yaml {
-   local prefix=$2
-   local s='[[:space:]]*'
-   local w='[a-zA-Z0-9_]*'
-   local fs=$(echo @|tr @ '\034')
-   sed -ne "s|^\($s\):|\1|" \
-        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
-   awk -F$fs '{
-      indent = length($1)/2;
-      vname[indent] = $2;
-      for (i in vname) {if (i > indent) {delete vname[i]}}
-      if (length($3) > 0) {
-         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
-      }
-   }'
-}
