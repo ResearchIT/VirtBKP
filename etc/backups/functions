@@ -3,18 +3,19 @@
 # Backup File 
 #
 
-ETCDIR=/root/ovirt-backup/etc
-LOGDIR=/var/log/ovirt-backup
-BACKUP_FILE=${ETCDIR}/schedule.yml
-BACKUP_LOGFILE=${LOGDIR}/backup.log
+ROOTDIR=/root/ovirt-backup
+ETCDIR=${ROOTDIR}/etc
+LOGDIR=${ROOTDIR}/log
+BACKUP_LOGFILE=${LOGDIR}/$( hostname -s ).log
 RUN_BACKUPS=1
 DEBUG=1
 
-ROOTDIR=/root/ovirt-backup
+BACKUP_FILE=${ETCDIR}/$( hostname -s ).yml
+
 
 function setup()
 {
-    mkdir -p ${LOGDIR}
+    mkdir -p ${LOGDIR} ${LOGDIR}
     touch ${BACKUP_LOGFILE}
     eval $(parse_yaml ${BACKUP_FILE})
 
