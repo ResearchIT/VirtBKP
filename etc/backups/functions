@@ -15,7 +15,7 @@ BACKUP_FILE=${ETCDIR}/$( hostname -s ).yml
 
 function setup()
 {
-    mkdir -p ${LOGDIR} ${LOGDIR}
+    mkdir -p ${LOGDIR}
     touch ${BACKUP_LOGFILE}
     eval $(parse_yaml ${BACKUP_FILE})
 
