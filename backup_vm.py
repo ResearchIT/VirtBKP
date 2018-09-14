@@ -252,7 +252,7 @@ def create_image_bkp(dev, diskname):
     printf.INFO(args.debug, "Creating qcow2 file: " + bckfile)
     
     with open(dev,'rb') as f:
-        with open(bckfile, "wb") as i:
+        with open(bckfile, "wb+") as i:
             while True:
                 if i.write(f.read(16777216)) == 0:
                     break
