@@ -367,5 +367,5 @@ if __name__ == "__main__":
     snaps = get_snaps(vmid)
 
     for snap in snaps:
-        printf.INFO(args.debug, "Trying to delete snapshot " + snapid + " of " + args.hostname)
+        printf.INFO(args.debug, "Trying to delete snapshot " + snap + " of " + args.hostname)
         delete_snap(vnid, snap)
