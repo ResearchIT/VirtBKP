@@ -15,5 +15,6 @@
     PYCURL_SSL_LIBRARY="nss" pip install pycurl
     pip install PyYAML
     pip install ovirt-engine-sdk-python
+    pip install niet
 
 

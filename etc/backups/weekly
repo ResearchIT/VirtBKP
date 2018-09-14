@@ -11,7 +11,7 @@ then
     ( set -o posix; set )
 fi
 
-for host in $( niet -f newline ".backup.daily" ${BACKUP_FILE} )
+for host in $( niet -f newline ".backup.weekly" ${BACKUP_FILE} )
 do
     if [ "$RUN_BACKUPS" -eq 0 ]
     then
