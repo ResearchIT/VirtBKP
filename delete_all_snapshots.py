@@ -368,4 +368,4 @@ if __name__ == "__main__":
 
     for snap in snaps:
         printf.INFO(args.debug, "Trying to delete snapshot " + snap + " of " + args.hostname)
-        delete_snap(vnid, snap)
+        delete_snap(vmid, snap)
