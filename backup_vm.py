@@ -222,20 +222,6 @@ def get_logical_disk(bkpid, diskid):
 
     return dev
 
-#
-#
-#
-def run_qemu_convert(cmd):
-    """
-    Convert the image to a qcow2 image file
-    """
-    out = subprocess.call(cmd, shell=True)
-    if int(out) == 0:
-        print
-        printf.OK(args.debug, "qcow2 file creation success")
-    else:
-        print
-        printf.ERROR(args.debug, "qcow2 file creation failed")
 
 #
 #
@@ -246,17 +232,11 @@ def create_image_bkp(dev, diskname):
     """
     bckfiledir = args.backup_dir + "/" + args.hostname + "/" + date
     mkdir = "mkdir -p " + bckfiledir
-    
-    bckfile = bckfiledir + "/" + diskname + ".dd"
-    
+    subprocess.call(mkdir, shell=True)
+    bckfile = bckfiledir + "/" + diskname + ".qcow2"
     printf.INFO(args.debug, "Creating qcow2 file: " + bckfile)
-    
-    with open(dev,'rb') as f:
-        with open(bckfile, "wb+") as i:
-            while True:
-                if i.write(f.read(16777216)) == 0:
-                    break
-
+    cmd = "qemu-img convert -O qcow2 " + dev + " " + bckfile
+    subprocess.call(cmd, shell=True)
 
 #
 #
