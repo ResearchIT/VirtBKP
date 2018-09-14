@@ -11,6 +11,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import lib.printf as printf
 from lib.utils import Utils
+import lib.vm as virt
 
 
 #
@@ -29,108 +30,6 @@ global connection
 
 
 #
-# Functions
-#==========
-
-#
-#
-#
-def get_vm_id(vmname):
-    """
-    Return a VM UUID based on the VM name. If multiple VMs are found, the first
-    match will be returned
-    """
-    vm_service = connection.service("vms")
-    vms = vm_service.list()
-
-    for vm in vms:
-        if vm.name == vmname:
-            return vm.id
-
-#
-#
-#
-def get_vm_tags(vmid):
-    tag_service = connection.service("vms/" + vmid + "/tags")
-    tags = tag_service.list()
-    tags_list = []
-
-    for tag in tags:
-        tags_list.append(tag.name)
-
-    return tags_list
-
-#
-#
-#
-def get_snap_id(vmid):
-    """
-    Using the VM identifier, return a list of snapshots
-    """
-    headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
-    vmsnap_service = connection.service("vms/" + vmid + "/snapshots")
-    snaps = vmsnap_service.list()
-
-    for snap in snaps:
-        if snap.description == snapname:
-            return snap.id
-
-#
-#
-#
-def get_snap_status(vmid, snapid):
-    """
-    Using the VM ID and the Snapshot ID, check the VM Snapshot status using
-    the snapshot service.
-    """
-    vmsnap_service = connection.service("vms/" + vmid + "/snapshots")
-    snaps = vmsnap_service.list()
-
-    for snap in snaps:
-        if snap.id == snapid:
-            return snap.snapshot_status
-
-#
-#
-#
-def create_snap(vmid, snapname):
-    """
-    Create a snapshot for the specified VM
-    """
-    vm_service = connection.service("vms")
-    snapshots_service = vm_service.vm_service(vmid).snapshots_service()
-    snapshots_service.add(types.Snapshot(description=snapname, persist_memorystate=False))
-    snapid = get_snap_id(vmid)
-    status = get_snap_status(vmid, snapid)
-
-    printf.INFO(args.debug, "Trying to create snapshot of VM: " + vmid)
-
-    while str(status) == "locked":
-       time.sleep(10)
-       status = get_snap_status(vmid, snapid)
-       printf.INFO(args.debug, "Snapshot status (" + str(status) + ")")
-
-    printf.OK(args.debug, "Snapshot " + snapid + " created")
-
-#
-#
-#
-def delete_snap(vmid, snapid):
-    """
-    Using the VM ID and the Snapshot ID, delete the specified VM Snapshot
-    and be sure to check on its status (do not try to )
-    """
-    snap_service = connection.service("vms/" + vmid + "/snapshots/" + snapid)
-    snap_service.remove()
-    status = get_snap_status(vmid,snapid)
-
-    while str(status) == "locked":
-        time.sleep(10)
-        printf.INFO(args.debug, "Waiting until snapshot deletion ends")
-        status = get_snap_status(vmid,snapid)
-
-    printf.OK(args.debug, "Snapshot " + snapid + " deleted.")
-
 #
 #
 def snap_disk_id(vmid, snapid):
@@ -347,7 +246,7 @@ if __name__ == "__main__":
     ### Retrieve VM
     ###
     printf.INFO(args.debug, "Retrieving VM --> " + args.hostname)
-    vmid = get_vm_id(args.hostname)
+    vmid = virt.get_vm_id(args.hostname)
     if vmid is None:
         printf.ERROR(args.debug, "Error retrieving " + args.hostname)
         sys.exit(1)
@@ -358,7 +257,7 @@ if __name__ == "__main__":
     ### Retrieve Backup system
     ###
     printf.INFO(args.debug, "Backup System --> " + args.backup_vm)
-    bkpid = get_vm_id(args.backup_vm)
+    bkpid = virt.get_vm_id(args.backup_vm)
     if bkpid is None:
         printf.ERROR(args.debug, "Error retrieving " + args.backup_vm)
         sys.exit(2)
@@ -370,8 +269,8 @@ if __name__ == "__main__":
     ###
     snapname = "BACKUP_" + args.hostname + "_" + date
     printf.INFO(args.debug, "Snapshot Name --> " + snapname)
-    create_snap(vmid, snapname)
-    snapid = get_snap_id(vmid)
+    virt.create_snap(vmid, snapname)
+    snapid = virt.get_snap_id(vmid)
     printf.DEBUG(args.debug, "Snapshot ID: " + snapid)
 
     ###
@@ -391,4 +290,4 @@ if __name__ == "__main__":
     ### Delete the Snapshot
     ###
     printf.INFO(args.debug, "Trying to delete snapshot " + snapid + " of " + args.hostname)
-    delete_snap(vmid, snapid)
+    virt.delete_snap(vmid, snapid)
