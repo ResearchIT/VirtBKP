@@ -138,6 +138,7 @@ def delete_snap(vmid, snapid):
 
     while str(status) == "locked":
         time.sleep(10)
+        printf.DEBUG(args.debug, "Waiting for deletion to finish")
         status = get_snap_status(vmid,snapid)
 
 
@@ -222,7 +223,6 @@ def get_logical_disk(bkpid, diskid):
 
     return dev
 
-
 #
 #
 #
@@ -234,7 +234,7 @@ def create_image_bkp(dev, diskname):
     mkdir = "mkdir -p " + bckfiledir
     subprocess.call(mkdir, shell=True)
     bckfile = bckfiledir + "/" + diskname + ".qcow2"
-    printf.INFO(args.debug, "Creating qcow2 file: " + bckfile)
+    printf.INFO(args.debug, "Creating qcow2 file: " + bckfile + ". This process may take some time to complete.")
     cmd = "qemu-img convert -O qcow2 " + dev + " " + bckfile
     subprocess.call(cmd, shell=True)
 
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     except Exception as ex:
         printf.ERROR(args.debug, "Connection to oVirt API has failed")
         printf.ERROR(args.debug, ex)
-        sys.exit(0)
+        sys.exit(1)
         
     ###
     ### Retrieve VM
@@ -348,6 +348,7 @@ if __name__ == "__main__":
         printf.ERROR(args.debug, "Error retrieving " + args.hostname)
         sys.exit(1)
     else:
+        printf.OK(args.debug, "VM OK")
         printf.DEBUG(args.debug, "VM ID: " + vmid)
 
     ###
@@ -359,6 +360,7 @@ if __name__ == "__main__":
         printf.ERROR(args.debug, "Error retrieving " + args.backup_vm)
         sys.exit(2)
     else:
+        printf.OK(args.debug, "Backup VM OK")
         printf.DEBUG(args.debug, "Backup VM ID: " + bkpid)
 
     ###
@@ -368,6 +370,7 @@ if __name__ == "__main__":
     printf.INFO(args.debug, "Snapshot Name --> " + snapname)
     create_snap(vmid, snapname)
     snapid = get_snap_id(vmid)
+    printf.OK(args.debug, "Snapshot OK")
     printf.DEBUG(args.debug, "Snapshot ID: " + snapid)
 
     ###
@@ -388,3 +391,4 @@ if __name__ == "__main__":
     ###
     printf.INFO(args.debug, "Trying to delete snapshot " + snapid + " of " + args.hostname)
     delete_snap(vmid, snapid)
+    printf.OK(args.debug, "Snapshot removed.")
