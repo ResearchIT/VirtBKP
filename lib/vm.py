@@ -47,6 +47,23 @@ def get_snap_id(vmid):
         if snap.description == snapname:
             return snap.id
 
+
+def get_snaps(vmid):
+    """
+    Return all snapshots for a specific Virtual Machine
+    """
+    snap_list = []
+    headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
+    vmsnap_service = connection.service("vms/" + vmid + "/snapshots")
+    snaps = vmsnap_service.list()
+
+    for snap in snaps:
+        snap_list.append(snap.id)
+           
+    return snap_list
+
+
+
 #
 #
 #
