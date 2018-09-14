@@ -11,7 +11,6 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import lib.printf as printf
 from lib.utils import Utils
-import lib.vm as virt
 
 
 #
@@ -358,7 +357,7 @@ if __name__ == "__main__":
     ### Retrieve VM
     ###
     printf.INFO(args.debug, "Retrieving VM --> " + args.hostname)
-    vmid = virt.get_vm_id(args.hostname)
+    vmid = get_vm_id(args.hostname)
     if vmid is None:
         printf.ERROR(args.debug, "Error retrieving " + args.hostname)
         sys.exit(1)
@@ -368,10 +367,5 @@ if __name__ == "__main__":
     snaps = get_snaps(vmid)
 
     for snap in snaps:
+        printf.INFO(args.debug, "Trying to delete snapshot " + snapid + " of " + args.hostname)
         delete_snap(vnid, snap)
-
-    ###
-    ### Delete the Snapshot
-    ###
-    printf.INFO(args.debug, "Trying to delete snapshot " + snapid + " of " + args.hostname)
-    virt.delete_snap(vmid, snapid)
