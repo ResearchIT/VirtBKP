@@ -13,6 +13,14 @@ import lib.printf as printf
 from lib.utils import Utils
 import lib.vm as virt
 
+#
+# Globals
+#========
+global args
+global date
+global utils
+global connection
+
 
 ###
 ### Initial Variable creation and setup
