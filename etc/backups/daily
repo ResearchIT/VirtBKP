@@ -21,4 +21,10 @@ do
         ${ROOTDIR}/backup_vm.py -ddd --hostname ${host} 2>&1 >${BACKUP_LOGFILE}
         echo "Finishing backup of ${host}" 2>&1 >${BACKUP_LOGFILE}
     fi
+
+    pushd ${BACKUP_DIR}/${host} 2>&1 >/dev/null
+    echo "Deleting file $( ls -tDp | awk 'NR>5' ) from ${BACKUP_DIR}/${host}..."
+    ls -tDp | awk 'NR>5' | xargs --no-run-if-empty rm -rf {} && 
+    popd 2>&1 >/dev/null
 done
+ls 

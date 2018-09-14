@@ -7,6 +7,7 @@ ROOTDIR=/root/ovirt-backup
 HOSTNAME=$( hostname -s )
 ETCDIR=${ROOTDIR}/etc
 LOGDIR=${ROOTDIR}/log
+BACKUP_DIR=/backup
 BACKUP_LOGFILE="${LOGDIR}/${HOSTNAME}.log"
 BACKUP_FILE="${ETCDIR}/${HOSTNAME}.yml"
 RUN_BACKUPS=1
