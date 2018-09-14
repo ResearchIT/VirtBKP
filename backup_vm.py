@@ -246,12 +246,17 @@ def create_image_bkp(dev, diskname):
     """
     bckfiledir = args.backup_dir + "/" + args.hostname + "/" + date
     mkdir = "mkdir -p " + bckfiledir
-    subprocess.call(mkdir, shell=True)
-    bckfile = bckfiledir + "/" + diskname + ".qcow2"
+    
+    bckfile = bckfiledir + "/" + diskname + ".dd"
+    
     printf.INFO(args.debug, "Creating qcow2 file: " + bckfile)
-    cmd = "qemu-img convert -O qcow2 " + dev + " " + bckfile
-    thread.start_new_thread(run_qemu_convert,(cmd,))
-    #utils.progress_bar_qcow(bckfile)
+    
+    with open(dev,'rb') as f:
+        with open(bckfile, "wb") as i:
+            while True:
+                if i.write(f.read(16777216)) == 0:
+                    break
+
 
 #
 #
