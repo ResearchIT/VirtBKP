@@ -358,7 +358,7 @@ if __name__ == "__main__":
     ### Retrieve VM
     ###
     printf.INFO(args.debug, "Retrieving VM --> " + args.hostname)
-    vmid = virt.get_vm_id(args.hostname)
+    vmid = get_vm_id(args.hostname)
     if vmid is None:
         printf.ERROR(args.debug, "Error retrieving " + args.hostname)
         sys.exit(1)
@@ -369,7 +369,7 @@ if __name__ == "__main__":
     ### Retrieve Backup system
     ###
     printf.INFO(args.debug, "Backup System --> " + args.backup_vm)
-    bkpid = virt.get_vm_id(args.backup_vm)
+    bkpid = get_vm_id(args.backup_vm)
     if bkpid is None:
         printf.ERROR(args.debug, "Error retrieving " + args.backup_vm)
         sys.exit(2)
@@ -381,8 +381,8 @@ if __name__ == "__main__":
     ###
     snapname = "BACKUP_" + args.hostname + "_" + date
     printf.INFO(args.debug, "Snapshot Name --> " + snapname)
-    virt.create_snap(vmid, snapname)
-    snapid = virt.get_snap_id(vmid)
+    create_snap(vmid, snapname)
+    snapid = get_snap_id(vmid)
     printf.DEBUG(args.debug, "Snapshot ID: " + snapid)
 
     ###
@@ -402,4 +402,4 @@ if __name__ == "__main__":
     ### Delete the Snapshot
     ###
     printf.INFO(args.debug, "Trying to delete snapshot " + snapid + " of " + args.hostname)
-    virt.delete_snap(vmid, snapid)
+    delete_snap(vmid, snapid)
