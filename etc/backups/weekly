@@ -17,8 +17,14 @@ do
     then
         echo "Backups disabled"
     else
-        echo "Backing up ${host}" 2>&1 >${BACKUP_LOGFILE}
-        ${ROOTDIR}/backup_vm.py -ddd --hostname ${host} 2>&1 >${BACKUP_LOGFILE}
-        echo "Finishing backup of ${host}" 2>&1 >${BACKUP_LOGFILE}
+    	echo $( date "+%Y%m%d%H%M" ) >> ${BACKUP_LOGFILE}
+        echo "Backing up ${host}" >> ${BACKUP_LOGFILE}
+        ${ROOTDIR}/backup_vm.py -ddd --hostname ${host} >> ${BACKUP_LOGFILE}
+        echo "Finishing backup of ${host}" >> ${BACKUP_LOGFILE}
     fi
+
+    pushd ${BACKUP_DIR}/${host} 2>&1 >/dev/null
+    echo "Deleting file $( ls -tDp | awk 'NR>5' ) from ${BACKUP_DIR}/${host}..." >> ${BACKUP_LOGFILE}
+    ls -tDp | awk 'NR>5' | xargs --no-run-if-empty rm -rf {} 
+    popd 2>&1 >/dev/null
 done
