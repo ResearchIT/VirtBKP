@@ -11,13 +11,17 @@ then
     ( set -o posix; set )
 fi
 
+echo "" > ${BACKUP_LOGFILE}
+echo "" > ${BACKUP_LOGFILE}
+echo "WEEKLY BACKUP: $( date +%Y%m%d-%H%M )" > ${BACKUP_LOGFILE}
+echo "-----" > ${BACKUP_LOGFILE}
+
 for host in $( niet -f newline ".backup.weekly" ${BACKUP_FILE} )
 do
     if [ "$RUN_BACKUPS" -eq 0 ]
     then
         echo "Backups disabled"
     else
-    	echo $( date "+%Y%m%d%H%M" ) >> ${BACKUP_LOGFILE}
         echo "Backing up ${host}" >> ${BACKUP_LOGFILE}
         ${ROOTDIR}/backup_vm.py -ddd --hostname ${host} >> ${BACKUP_LOGFILE}
         echo "Finishing backup of ${host}" >> ${BACKUP_LOGFILE}
