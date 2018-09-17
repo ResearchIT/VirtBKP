@@ -9,7 +9,7 @@ ENDC = '\033[0m'
 
 def OK(count, msg):
 	if count >= 0:
-	    print GREEN + "[OK] " + msg + ENDC
+		print GREEN + "[OK] " + msg + ENDC
 		sys.stdout.flush()
 
 def ERROR(count, msg):
