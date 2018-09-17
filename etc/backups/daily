@@ -11,10 +11,10 @@ then
     ( set -o posix; set )
 fi
 
-echo "" > ${BACKUP_LOGFILE}
-echo "" > ${BACKUP_LOGFILE}
-echo "DAILY BACKUP: $( date +%Y%m%d-%H%M )" > ${BACKUP_LOGFILE}
-echo "-----" > ${BACKUP_LOGFILE}
+echo "" >> ${BACKUP_LOGFILE}
+echo "" >> ${BACKUP_LOGFILE}
+echo "DAILY BACKUP: $( date +%Y%m%d-%H%M )" >> ${BACKUP_LOGFILE}
+echo "-----" >> ${BACKUP_LOGFILE}
 
 for host in $( niet -f newline ".backup.daily" ${BACKUP_FILE} )
 do

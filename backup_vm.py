@@ -233,9 +233,9 @@ def create_image_bkp(dev, diskname):
     bckfiledir = args.backup_dir + "/" + args.hostname + "/" + date
     mkdir = "mkdir -p " + bckfiledir
     subprocess.call(mkdir, shell=True)
-    bckfile = bckfiledir + "/" + diskname + ".qcow2"
+    bckfile = bckfiledir + "/" + diskname + ".c.qcow2"
     printf.INFO(args.debug, "Creating qcow2 file: " + bckfile + ". This process may take some time to complete.")
-    cmd = "qemu-img convert -O qcow2 " + dev + " " + bckfile
+    cmd = "qemu-img convert -c -O qcow2 " + dev + " " + bckfile
     subprocess.call(cmd, shell=True)
 
 #
