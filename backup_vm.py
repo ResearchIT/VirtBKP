@@ -122,7 +122,9 @@ def create_snap(vmid, snapname):
     while str(status) == "locked":
        time.sleep(10)
        status = get_snap_status(vmid, snapid)
+       printf.DEBUG(args.debug, "Snapshot Creation Status (create_snap): " + status)
 
+    return status
 
 #
 #
@@ -174,6 +176,8 @@ def attach_disk(bkpid, diskid, snapid):
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(args.username, args.password))
+    return resp_attach
+
 
 #
 #
@@ -187,6 +191,8 @@ def deactivate_disk(bkpid, diskid):
     urldeactivate = args.api_url + "/v3/vms/" + bkpid + "/disks/" + diskid + "/deactivate"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
+    return resp_attach
+
 
 #
 #
@@ -198,7 +204,9 @@ def detach_disk(bkpid, diskid):
     printf.INFO(args.debug, "Detaching Disk")
     urldelete = args.api_url + "/vms/" + bkpid + "/diskattachments/" + diskid
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    requests.delete(urldelete, verify=False, auth=(args.username, args.password))
+    resp_attach = requests.delete(urldelete, verify=False, auth=(args.username, args.password))
+    return resp_attach
+
 
 #
 #
@@ -236,7 +244,8 @@ def create_image_bkp(dev, diskname):
     bckfile = bckfiledir + "/" + diskname + ".c.qcow2"
     printf.INFO(args.debug, "Creating qcow2 file: " + bckfile + ". This process may take some time to complete.")
     cmd = "qemu-img convert -c -O qcow2 " + dev + " " + bckfile
-    subprocess.call(cmd, shell=True)
+    code = subprocess.call(cmd, shell=True)
+    return code
 
 #
 #
@@ -265,22 +274,30 @@ def backup(vmid, snapid, disk_id, bkpid):
         - Removing the snapshot disk from the Backup VM
     """
     printf.INFO(args.debug, "Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
-    attach_disk(bkpid, disk_id, snapid)
+    attach_output = attach_disk(bkpid, disk_id, snapid)
+    printf.DEBUG(args.debug, "Attach Output: " + attach_output)
 
     printf.INFO(args.debug, "Identifying disk device (this might take a while)")
     dev = get_logical_disk(bkpid, disk_id)
     diskname = get_disk_name(vmid, snapid, disk_id)
     printf.DEBUG(args.debug, "Dev: " + dev)
+    printf.DEBUG(args.debug, "Disk Name: " + diskname)
 
     printf.INFO(args.debug, "Creating an image backup of the disk")
-    create_image_bkp(dev, diskname)
+    returncode = create_image_bkp(dev, diskname)
+    if returncode == 0:
+        printf.DEBUG(args.debug, "Image backup created successfully")
+    else:
+        printf.DEBUG(args.debug, "Image backup not created successfully")
 
     printf.INFO(args.debug, "Deactivating the disk")
-    deactivate_disk(bkpid, disk_id)
+    response = deactivate_disk(bkpid, disk_id)
+    printf.DEBUG(args.debug, "Deactivate Response: " + response)
     time.sleep(10)
 
     printf.INFO(args.debug, "Detaching snapshot disk from " + args.backup_vm)
-    detach_disk(bkpid, disk_id)
+    response = detach_disk(bkpid, disk_id)
+    printf.DEBUG(args.debug, "Detach Response: " + response)
     time.sleep(10)
 
 #
