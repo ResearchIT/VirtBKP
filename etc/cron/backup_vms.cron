@@ -1,9 +1,9 @@
-#Min    Hrs     DoM     Mon     DoW     User    Script
+#Min	Hrs	DoM	Mon	DoW	User	Script
 # If it's the first saturday of the month, run everything!!!!!
-0       2       *       *       6       root    [ $(date +\%d) -le 07 ] && /root/ovirt-backup/etc/backups/monthly && /root/ovirt-backup/etc/backups/weekly && /root/ovirt-backup/etc/backups/daily
+0	0	*	*	6	root	[ $(date +\%d) -le 07 ] && /root/ovirt-backup/etc/backups/monthly && /root/ovirt-backup/etc/backups/weekly && /root/ovirt-backup/etc/backups/daily && /usr/sbin/shutdown -r now
 
 # If it's any other saturday of the month, just run weekly and daily
-0       2       *       *       6       root    [ $(date +\%d) -ge 08 ] && /root/ovirt-backup/etc/backups/weekly && /root/ovirt-backup/etc/backups/daily 
+0	0	*	*	6	root	[ $(date +\%d) -ge 08 ] && /root/ovirt-backup/etc/backups/weekly && /root/ovirt-backup/etc/backups/daily && /usr/sbin/shutdown -r now
 
-# For all days other than saturday, just run the daily backup
-0       2       *       *       0,1,2,3,4,5     root    /root/ovirt-backup/etc/backups/daily
+# For all days other than saturday and sunday, just run the daily backup
+22	12	*	*	1,2,3,4,5	root	/root/ovirt-backup/etc/backups/daily && /usr/sbin/shutdown -r now
