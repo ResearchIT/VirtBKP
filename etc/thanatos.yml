@@ -1,0 +1,12 @@
+backup:
+  daily:
+    - "cs.webfs1"
+  weekly:
+    - "cs.devops"
+    - "cs.chip-d-1"
+    - "cs.bam-d-1"
+    - "cs.db-d-1"
+    - "cs.fc-d-1"
+    - "cs.vcs-d-1"
+  monthly:
+    - "cs.web"
