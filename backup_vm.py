@@ -275,7 +275,7 @@ def backup(vmid, snapid, disk_id, bkpid):
     printf.INFO(args.debug, "Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
     attach_output = attach_disk(bkpid, disk_id, snapid)
     try:
-        printf.DEBUG(args.debug, "Attach Output: " + str(attach_output.status))
+        printf.DEBUG(args.debug, "Attach Output: " + str(attach_output.status_code))
     except:
         print "Could not print output"
         # no op
@@ -295,12 +295,12 @@ def backup(vmid, snapid, disk_id, bkpid):
 
     printf.INFO(args.debug, "Deactivating the disk")
     response = deactivate_disk(bkpid, disk_id)
-    printf.DEBUG(args.debug, "Deactivate Response: " + str(response.status))
+    printf.DEBUG(args.debug, "Deactivate Response: " + str(response.status_code))
     time.sleep(10)
 
     printf.INFO(args.debug, "Detaching snapshot disk from " + args.backup_vm)
     response = detach_disk(bkpid, disk_id)
-    printf.DEBUG(args.debug, "Detach Response: " + str(response.status))
+    printf.DEBUG(args.debug, "Detach Response: " + str(response.status_code))
     time.sleep(10)
 
 #
