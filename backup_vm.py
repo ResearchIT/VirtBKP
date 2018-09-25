@@ -175,7 +175,7 @@ def attach_disk(bkpid, diskid, snapid):
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(args.username, args.password))
-    return str(resp_attach)
+    return resp_attach
 
 
 #
@@ -190,7 +190,7 @@ def deactivate_disk(bkpid, diskid):
     urldeactivate = args.api_url + "/v3/vms/" + bkpid + "/disks/" + diskid + "/deactivate"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
-    return str(resp_attach)
+    return resp_attach
 
 
 #
@@ -204,7 +204,7 @@ def detach_disk(bkpid, diskid):
     urldelete = args.api_url + "/vms/" + bkpid + "/diskattachments/" + diskid
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.delete(urldelete, verify=False, auth=(args.username, args.password))
-    return str(resp_attach)
+    return resp_attach
 
 
 #
@@ -275,7 +275,7 @@ def backup(vmid, snapid, disk_id, bkpid):
     printf.INFO(args.debug, "Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
     attach_output = attach_disk(bkpid, disk_id, snapid)
     try:
-        printf.DEBUG(args.debug, "Attach Output: " + str(attach_output))
+        printf.DEBUG(args.debug, "Attach Output: " + str(attach_output.status))
     except:
         print "Could not print output"
         # no op
@@ -295,12 +295,12 @@ def backup(vmid, snapid, disk_id, bkpid):
 
     printf.INFO(args.debug, "Deactivating the disk")
     response = deactivate_disk(bkpid, disk_id)
-    printf.DEBUG(args.debug, "Deactivate Response: " + response)
+    printf.DEBUG(args.debug, "Deactivate Response: " + str(response.status))
     time.sleep(10)
 
     printf.INFO(args.debug, "Detaching snapshot disk from " + args.backup_vm)
     response = detach_disk(bkpid, disk_id)
-    printf.DEBUG(args.debug, "Detach Response: " + response)
+    printf.DEBUG(args.debug, "Detach Response: " + str(response.status))
     time.sleep(10)
 
 #
