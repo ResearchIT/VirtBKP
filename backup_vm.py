@@ -274,7 +274,7 @@ def backup(vmid, snapid, disk_id, bkpid):
     """
     printf.INFO(args.debug, "Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
     attach_output = attach_disk(bkpid, disk_id, snapid)
-    printf.DEBUG(args.debug, "Attach Output: " + attach_output)
+    printf.DEBUG(args.debug, "Attach Output: " + str(attach_output))
 
     printf.INFO(args.debug, "Identifying disk device (this might take a while)")
     dev = get_logical_disk(bkpid, disk_id)
