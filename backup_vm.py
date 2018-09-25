@@ -85,7 +85,7 @@ def get_snaps(vmid):
 
     for snap in snaps:
         snap_list.append(snap.id)
-           
+
     return snap_list
 
 
@@ -315,7 +315,7 @@ if __name__ == "__main__":
     snapname = None
     snapid = None
     vm_disks = None
- 
+
     now = datetime.datetime.now()
     date = now.strftime("%Y%m%d-%H%M")
 
@@ -355,7 +355,7 @@ if __name__ == "__main__":
         printf.ERROR(args.debug, "Connection to oVirt API has failed")
         print ex
         sys.exit(1)
-        
+
     ###
     ### Retrieve VM
     ###
