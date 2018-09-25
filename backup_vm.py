@@ -274,11 +274,17 @@ def backup(vmid, snapid, disk_id, bkpid):
     """
     printf.INFO(args.debug, "Attach snapshot disk to Backup VM {" + snapid + " | " + disk_id + "}")
     attach_output = attach_disk(bkpid, disk_id, snapid)
-    try:
-        printf.DEBUG(args.debug, "Attach Output: " + str(attach_output.status_code))
-    except:
-        print "Could not print output"
-        # no op
+    printf.DEBUG(args.debug, "Attach Output: " + str(attach_output.status_code))
+
+    # Updating attach status code output | If snapshot not attached, then remove
+    # the snapshot.
+    if attach_output.status_code != 201:
+        printf.ERROR(args.debug, "Error - Could not attach disk")
+        printf.ERROR(args.debug, "Trying to remove snapshot")
+        printf.INFO(args.debug, "Trying to delete snapshot " + snapid + " of " + args.hostname)
+        delete_snap(vmid, snapid)
+        printf.OK(args.debug, "Snapshot removed.")
+        sys.exit(10)
 
     printf.INFO(args.debug, "Identifying disk device (this might take a while)")
     dev = get_logical_disk(bkpid, disk_id)
@@ -292,6 +298,7 @@ def backup(vmid, snapid, disk_id, bkpid):
         printf.DEBUG(args.debug, "Image backup created successfully")
     else:
         printf.DEBUG(args.debug, "Image backup not created successfully")
+
 
     printf.INFO(args.debug, "Deactivating the disk")
     response = deactivate_disk(bkpid, disk_id)
