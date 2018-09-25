@@ -175,7 +175,7 @@ def attach_disk(bkpid, diskid, snapid):
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.post(urlattach, data=xmlattach, headers=headers, verify=False, auth=(args.username, args.password))
-    return resp_attach
+    return str(resp_attach)
 
 
 #
@@ -190,7 +190,7 @@ def deactivate_disk(bkpid, diskid):
     urldeactivate = args.api_url + "/v3/vms/" + bkpid + "/disks/" + diskid + "/deactivate"
     headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'}
     resp_attach = requests.post(urldeactivate, data=xmldeactivate, headers=headers, verify=False, auth=(args.username, args.password))
-    return resp_attach
+    return str(resp_attach)
 
 
 #
@@ -204,7 +204,7 @@ def detach_disk(bkpid, diskid):
     urldelete = args.api_url + "/vms/" + bkpid + "/diskattachments/" + diskid
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     resp_attach = requests.delete(urldelete, verify=False, auth=(args.username, args.password))
-    return resp_attach
+    return str(resp_attach)
 
 
 #
