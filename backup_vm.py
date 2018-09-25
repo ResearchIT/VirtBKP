@@ -29,7 +29,6 @@ global utils
 global connection
 
 
-
 #
 #
 #
@@ -122,9 +121,9 @@ def create_snap(vmid, snapname):
     while str(status) == "locked":
        time.sleep(10)
        status = get_snap_status(vmid, snapid)
-       printf.DEBUG(args.debug, "Snapshot Creation Status (create_snap): " + status)
+       printf.DEBUG(args.debug, "Snapshot Creation Status (create_snap): " + str(status))
 
-    return status
+    return str(status)
 
 #
 #
