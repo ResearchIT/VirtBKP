@@ -6,4 +6,4 @@
 0	0	*	*	6	root	[ $(date +\%d) -ge 08 ] && /root/ovirt-backup/etc/backups/weekly && /root/ovirt-backup/etc/backups/daily && /usr/sbin/shutdown -r now
 
 # For all days other than saturday and sunday, just run the daily backup
-22	12	*	*	1,2,3,4,5	root	/root/ovirt-backup/etc/backups/daily && /usr/sbin/shutdown -r now
+0 0	*	*	1,2,3,4,5	root	/root/ovirt-backup/etc/backups/daily && /usr/sbin/shutdown -r now
