@@ -7,6 +7,7 @@ backup:
     - "las.ra"
     - "las.vinz"
     - "las.zuul"
+    - "bb.chi"
   weekly:
     - "cs.caesium"
     - "cs.cyoj2"
@@ -50,4 +51,3 @@ backup:
     - "las.hpcsoft1"
     - "las.Materialstudio"
     - "las.research-b"
-
