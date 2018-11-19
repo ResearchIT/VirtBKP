@@ -10,3 +10,4 @@ backup:
     - "cs.vcs-d-1"
   monthly:
     - "cs.web"
+    - "eeob.envp-rdp.las.iastate.edu"
